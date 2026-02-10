@@ -67,6 +67,7 @@ class MyLogger:
                 "40": logging.ERROR,
                 "50": logging.CRITICAL
                 }
+    time = time
 
     def __init__(self, name=__name__, level="DEBUG", is_stream=True, file_path=None, fh_fmt=None, sh_fmt=None,
                  is_date=True, when="d", interval=3, backup_count=100, max_bytes=10 * 1024 * 1024
@@ -77,7 +78,7 @@ class MyLogger:
          max_bytes：以文件大小的方式进行保存，单位为字节。 10 * 1024 * 1024 = 10M。
         """
         self.logger = logging.getLogger(name)         # 创建日志器，自定义名称。默认为 __name__ 文件名。
-        self.log_level=MyLogger.level_dic[str(level)]
+        self.log_level=MyLogger.level_dic[str(level).upper()]
         self.logger.setLevel(self.log_level)         # 初始日志级别，默认为10。
         self.formatter = "[logger:%(name)s | %(asctime)s | %(filename)s | %(lineno)d行]:\n%(levelname)s：%(message)s"
         self.stream_handler = None
@@ -121,7 +122,7 @@ class MyLogger:
     def stream_logger_level(self, level):
         """单独调整屏幕输出的等级"""
         if self.stream_handler:
-            self.stream_handler.setLevel(MyLogger.level_dic[str(level)])
+            self.stream_handler.setLevel(MyLogger.level_dic[str(level).upper()])
         else:
             print("未创建输出到屏幕的handler。")
 
@@ -129,7 +130,7 @@ class MyLogger:
     def make_fh_handler(self, file_path, fh_fmt=None):
         if file_path:
             file_path = Path(file_path)# 存储到文件
-            print(Path(file_path).absolute())
+            # MyLogger.print(Path(file_path).absolute())
             if not Path(file_path).parent.exists():
                 Path(file_path).parent.mkdir(parents=True)
 
@@ -163,7 +164,7 @@ class MyLogger:
     def file_logger_level(self, level):
         """单独调整屏幕输出的等级"""
         if self.file_handler:
-            self.file_handler.setLevel(MyLogger.level_dic[str(level)])
+            self.file_handler.setLevel(MyLogger.level_dic[str(level).upper()])
         else:
             print("未创建保存到文件的handler。")
 
