@@ -8,8 +8,10 @@ Use Python's logging instead of print to quickly output program information to t
 5. 支持原生print函数，附带文件名和行号。
 # 快速使用
 
+`pip install yan-logger`
+
 ```python
-from logger_model import MyLogger
+from yan-logger import MyLogger
 
 mg = MyLogger()
 mg.debug('debug')
@@ -24,7 +26,7 @@ mg.critical('critical')
 
 # 进阶使用
 ```python
-from logger_model import MyLogger
+from yan-logger import MyLogger
 
 mg = MyLogger("new_logger", file_path='log_demo.log')   # 自定义日志器名称，输出到屏幕且保存到log_demo.log文件中。  具体参数设置见源码。
 mg.stream_logger_level= "warning"                       # 设置输出到屏幕的日志级别为"warning"
@@ -41,7 +43,7 @@ mg.critical('critical')
 
 **计算程序运行时间**
 ```python
-from logger_model import MyLogger
+from yan-logger import MyLogger
 
 mg = MyLogger("new_logger")
 
