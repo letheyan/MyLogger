@@ -1,5 +1,5 @@
 # Time: 2026/2/6 15:28         
-# Author: 颜慧雍                   
+# Author: Lethe                   
 # File: log_model.py             
 # Software: PyCharm    
 
@@ -271,4 +271,5 @@ if __name__ == '__main__':
             time.sleep(1)
 
     MyLogger.print("测试")
+
 
