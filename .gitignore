@@ -1,0 +1,17 @@
+# Ignore Python virtual environment
+.venv/
+
+# Ignore PyCharm IDE specific files
+.idea/
+
+# Ignore build artifacts
+dist/
+src/yan_logger.egg-info/
+
+# Ignore log files
+log.txt
+
+# Ignore generated files
+*.pyc
+*.pyo
+__pycache__/
