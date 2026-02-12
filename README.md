@@ -1,5 +1,6 @@
 # MyLogger
 Use Python's logging instead of print to quickly output program information to the screen and log files, distinguish information levels by color, and include the ability to calculate program runtime.
+
 具备功能：
 1. 支持不同日志等级以不同颜色输出。
 2. 支持同时输出到屏幕及日志文件内。
@@ -7,11 +8,11 @@ Use Python's logging instead of print to quickly output program information to t
 4. 支持计算程序运行时间。
 5. 支持原生print函数，附带文件名和行号。
 # 快速使用
-
+安装:<br>
 `pip install yan-logger`
 
 ```python
-from yan-logger import MyLogger
+from yan-logger import MyLogger  # 导入
 
 mg = MyLogger()
 mg.debug('debug')
@@ -21,10 +22,13 @@ mg.error('error')
 mg.critical('critical')
 ```
 运行结果：
-包含 日志器名称、运行时间点、运行文件名、输出所在行号
+包含 日志器名称、运行时间点、运行文件名、输出所在行号。不同日志等级以不同颜色输出，见下图：
 <img width="690" height="281" alt="image" src="https://github.com/user-attachments/assets/0e304879-8c72-4881-996a-f897a1bbc463" />
 
 # 进阶使用
+可自定义输出到屏幕和保存到日志文件两种handler，分别独立设置级别。
+启用保存到文件时，还可设置按日期循环及文件大小循环两种模式对文件进行切割。
+具体参数设置见源码，也可参考RotatingFileHandler及TimedRotatingFileHandler的参数。
 ```python
 from yan-logger import MyLogger
 
@@ -67,4 +71,13 @@ fun()
 自动输出程序运行时间<br>
 <img width="701" height="444" alt="image" src="https://github.com/user-attachments/assets/65e318ce-29fe-4b1e-8a54-c97d81abd418" />
 
+# 集成小功能
+1. 集成实例静态print函数，增加显示文件名及行号。
+2. 类方法集成了sleep模块，不用多次导入。
+```python
+with ml.with_run_time():
+    MyLogger.print("开始计时……")         # 集成实例静态print函数，增加显示文件名及行号。
+    MyLogger.time.sleep(3)              # 类方法集成了sleep模块，不用多次导入。
+    MyLogger.print("with 模块运行结束。")
+```
 
