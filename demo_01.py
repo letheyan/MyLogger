@@ -4,6 +4,7 @@
 # Software: PyCharm
 
 from yan_logger import MyLogger
+# from src.yan_logger import MyLogger
 
 ml = MyLogger()
 

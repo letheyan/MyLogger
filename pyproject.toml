@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "yan_logger"  # 全小写，短横线分隔
-version = "0.1.0"
+version = "0.1.1"
 description = "Use Python's logging instead of print to quickly output program information to the screen and log files, distinguish information levels by color, and include the ability to calculate program runtime. "
 readme = "README.md"
 requires-python = ">=3.8"

@@ -80,4 +80,6 @@ with ml.with_run_time():
     MyLogger.time.sleep(3)              # 类方法集成了sleep模块，不用多次导入。
     MyLogger.print("with 模块运行结束。")
 ```
+运行结果<br>
+<img width="681" height="118" alt="image" src="https://github.com/user-attachments/assets/6cabca90-ed7c-41a5-bd61-ae272d8af3e3" />
 

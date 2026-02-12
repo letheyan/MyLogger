@@ -243,10 +243,10 @@ class MyLogger:
     @staticmethod
     def print(*args,**kwargs):
         from builtins import print as _print
-        s = f'{sys._getframe(1).f_lineno}'  # 注此处需加参数 1。
-        return _print(f'【"{__name__}" 第{s}行】>:', *args, **kwargs)
-
-
+        caller_frame = sys._getframe(1) # 注此处需加参数 1。
+        row = f'{caller_frame.f_lineno}'
+        caller_name = Path(caller_frame.f_code.co_filename).name
+        return _print(f'【"{caller_name}" 第{row}行】>:', *args, **kwargs)
 
 if __name__ == '__main__':
     ml = MyLogger()
