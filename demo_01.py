@@ -3,8 +3,9 @@
 # File: demo_01.py             
 # Software: PyCharm
 
-from yan_logger import MyLogger
-# from src.yan_logger import MyLogger
+# from yan_logger import MyLogger
+from src.yan_logger import MyLogger
+
 
 ml = MyLogger()
 

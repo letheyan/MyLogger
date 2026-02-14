@@ -242,11 +242,11 @@ class MyLogger:
     # 等同print函数，只是增加了输出 文件名+行号。
     @staticmethod
     def print(*args,**kwargs):
-        from builtins import print as _print
+        # from builtins import print as _print
         caller_frame = sys._getframe(1) # 注此处需加参数 1。
         row = f'{caller_frame.f_lineno}'
         caller_name = Path(caller_frame.f_code.co_filename).name
-        return _print(f'【"{caller_name}" 第{row}行】>:', *args, **kwargs)
+        return print(f'【"{caller_name}" 第{row}行】>:', *args, **kwargs)
 
 if __name__ == '__main__':
     ml = MyLogger()
