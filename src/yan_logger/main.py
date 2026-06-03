@@ -132,7 +132,7 @@ class MyLogger:
         # 把参数存入到类属性中，方便后续调用。
         MyLogger._configs[name] = {
             'formatter': self.formatter,
-            'file_path': file_path,
+            'file_path': self.file_path,
             'is_date': is_date,
             'when': when,
             'interval': interval,
@@ -175,7 +175,7 @@ class MyLogger:
         if self.stream_handler:
             self.stream_handler.setLevel(MyLogger.level_dic[str(level).upper()])
         else:
-            print("未创建输出到屏幕的handler。")
+            self.logger.info("未创建输出到屏幕的handler。")
 
     def disable_stream(self):
         """禁用屏幕输出"""
@@ -189,7 +189,7 @@ class MyLogger:
             fmt = sh_fmt if sh_fmt else self.formatter
             self.make_sh_handler(True, fmt)
         else:
-            MyLogger.print("已开启输出到屏幕，无需重新开启。")
+            self.logger.info("已开启输出到屏幕，无需重新开启。")
 
 
     # 输出到文件，永久保存。
@@ -201,9 +201,9 @@ class MyLogger:
                 if not Path(file_path).parent.exists():
                     Path(file_path).parent.mkdir(parents=True)
             except Exception as e:
-                MyLogger.error(e, exc_info=True)
-                MyLogger.warniing("【采用当前目录进行存储】")
-                file_path = "."
+                self.logger.error(e, exc_info=True)
+                self.logger.warning("【采用当前目录进行存储./log.txt】")
+                file_path = Path("./log.txt")
 
             # when='D', interval=3  每3天，创建一个文件。 backupCount=100 最多保存100个
             if is_date:
@@ -213,9 +213,13 @@ class MyLogger:
                     if interval.isdigit():
                         interval = int(interval)
                         if interval < 1:
-                            MyLogger.error("make_fh_handler函数的interval参数必须大于等于1。设为默认值【1】")
+                            self.logger.error("make_fh_handler函数的interval参数必须大于等于1。设为默认值【1】")
+                            interval = 1
+                    else:
+                        self.logger.error("make_fh_handler函数的interval参数须是整型或整型字符串。设为默认值【1】")
+                        interval = 1
                 else:
-                    MyLogger.error("make_fh_handler函数的interval参数需是整型或整型字符串。设为默认值【1】")
+                    self.logger.error("make_fh_handler函数的interval参数须是整型或整型字符串。设为默认值【1】")
                     interval = 1
 
                 self.file_handler = logging.handlers.TimedRotatingFileHandler(filename=file_path,
@@ -224,6 +228,9 @@ class MyLogger:
                                                                               backupCount=backup_count,
                                                                               encoding="utf-8")  # 创建日志处理器，用文件存放日志。
             else:
+                if max_bytes <= 0:
+                    self.logger.warning("max_bytes 必须大于0，已设为默认 5MB")
+                    max_bytes = 5 * 1024 * 1024
                 self.file_handler = logging.handlers.RotatingFileHandler(filename=file_path,
                                                                          maxBytes=max_bytes, # 5MB
                                                                          backupCount=backup_count,
@@ -248,7 +255,7 @@ class MyLogger:
         if self.file_handler:
             self.file_handler.setLevel(MyLogger.level_dic[str(level).upper()])
         else:
-            print("未创建保存到文件的handler。")
+            self.logger.info("未创建保存到文件的handler。")
 
     def disable_file(self):
         """禁用保存到文件"""
@@ -257,22 +264,30 @@ class MyLogger:
             self.file_handler.close()
             self.file_handler = None
 
-    def enable_file(self, file=None, sh_fmt=None, is_date:bool=False , when:str="", interval=0, backup_count=0, max_bytes=0):
+    def enable_file(self, file=None, fh_fmt=None,  is_date=None, when=None,
+                    interval=None, backup_count=None, max_bytes=None):
         if self.file_handler is None:
             if not file and not self.file_path:
-                MyLogger.error("请输入保存的logger文件名或路径。")
+                self.logger.error("请输入保存的logger文件名或路径。")
                 return
             else:
-                path = file if file else self.file_path
-                fmt = sh_fmt if sh_fmt else self.formatter
-                is_date = is_date if is_date else self.is_date
-                when = when if when else self.when
-                interval = interval if interval else self.interval
-                backup_count = backup_count if backup_count else self.backup_count
-                max_bytes = max_bytes if max_bytes else self.max_bytes
-                self.make_fh_handler(path, fmt, is_date, when, interval, backup_count, max_bytes)
+                if file is None or file == "":
+                    file = self.file_path
+                if fh_fmt is None:
+                    fh_fmt = self.fh_fmt or self.formatter
+                if is_date is None:
+                    is_date = self.is_date
+                if when is None:
+                    when = self.when
+                if interval is None:
+                    interval = self.interval
+                if backup_count is None:
+                    backup_count = self.backup_count
+                if max_bytes is None:
+                    max_bytes = self.max_bytes
+                self.make_fh_handler(file, fh_fmt, is_date, when, interval, backup_count, max_bytes)
         else:
-            MyLogger.print("已开启保存到文件，无需重新开启。")
+            self.logger.info("已开启保存到文件，无需重新开启。")
 
     # 显式代理最常用的方法（为了更好的IDE提示和类型检查）,与下面的def __getattr__(self, name)方法二选一
     # stacklevel表示：从当前帧（Logger.debug被调用处）向上跳过的帧数。设为2即跳过代理层 + Logger内部层，精准定位到用户代码。
