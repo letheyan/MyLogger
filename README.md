@@ -1,12 +1,20 @@
 # MyLogger
 Use Python's logging instead of print to quickly output program information to the screen and log files, distinguish information levels by color, and include the ability to calculate program runtime.
 
-具备功能：
+## 具备功能：
 1. 支持不同日志等级以不同颜色输出。
 2. 支持同时输出到屏幕及日志文件内。
 3. 支持常用的日志设置。
 4. 支持计算程序运行时间。
-5. 支持原生print函数，附带文件名和行号。
+5. 支持原生print函数，附带文件名和行号。 
+## 更新功能：
+1. 增加可动态设置输出到屏幕与保存到日志属性功能。
+2. 增加路径参数校验功能。
+## 修复问题：
+1. 解决多文件存在引用的情况下，设置相同的Logger名称下，会同时输出多个多个logger信息的问题。
+2. 解决with_run_time显示的行号不准确的问题。
+
+
 # 快速使用
 安装:<br>
 `pip install yan-logger`
@@ -44,6 +52,20 @@ mg.critical('critical')
 运行结果：
 在屏幕上只输出"warning" 级别以上的内容，在日志文件中是输出info级别内容。
 <img width="652" height="167" alt="image" src="https://github.com/user-attachments/assets/adc59dba-c6fd-42ca-b80f-365bf9a1b3b1" />
+
+**关闭/启动输出到屏幕**
+```python
+mg = MyLogger("new_logger", file_path='log_demo.log')
+mg.disable_stream()     # 关闭
+mg.enable_stream()      # 启动
+```
+**关闭/启动输出到屏幕**
+```python
+mg = MyLogger("new_logger", file_path='log_demo.log')
+mg.disable_file()       # 关闭
+mg.enable_file()        # 启动，可以自定义新的参数。
+```
+
 
 **计算程序运行时间**
 ```python

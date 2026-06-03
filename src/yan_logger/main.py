@@ -53,6 +53,9 @@ class MyLogger:
                 mg.error("消息")
        """
 
+    _initialized = set()
+    _configs = {}  # 存储每个 name 的配置 {name: config_dict}
+
     level_dic ={"NOTSET":logging.NOTSET,
                 "DEBUG":logging.DEBUG,
                 "INFO":logging.INFO,
@@ -69,26 +72,75 @@ class MyLogger:
     time = time
 
     def __init__(self, name=__name__, level="DEBUG", is_stream=True, file_path=None, fh_fmt=None, sh_fmt=None,
-                 is_date=True, when="d", interval=3, backup_count=100, max_bytes=10 * 1024 * 1024
+                 is_date=True, when="d", interval=3, backup_count=100, max_bytes=5 * 1024 * 1024
                  ):
         """
+         is_date：默认True，以日期循环的方式进行存储
+         interval：默认3，3天一个文件。
          when：以日期循环的方式保存，参数有 'S' 秒，'M' 分钟，'H' 小时，'D' 天，'W0'-'W6' 工作日(0=星期一)。
          backupCount : 保存的文件个数，超过设置的数值，会清空前面的。如果为 0 ，则一直保存。
-         max_bytes：以文件大小的方式进行保存，单位为字节。 10 * 1024 * 1024 = 10M。
+         max_bytes：以文件大小的方式进行保存，单位为字节。 5 * 1024 * 1024 = 5M。
         """
+        if name in MyLogger._initialized:
+            # 已经存在的实例，只需要拿到已有的 logger 对象即可
+            self.logger = logging.getLogger(name)
+            # MyLogger.print("已经存在的实例")
+            # 可以跳过后续所有属性初始化
+            self.stream_handler = None
+            self.file_handler = None
+            # 尝试从已有的 handlers 中恢复 stream_handler 和 file_handler 引用
+            for h in self.logger.handlers:
+                if isinstance(h, logging.StreamHandler) and not isinstance(h,
+                                                                           (logging.handlers.TimedRotatingFileHandler,
+                                                                            logging.handlers.RotatingFileHandler)):
+                    self.stream_handler = h
+                elif isinstance(h, (logging.handlers.TimedRotatingFileHandler, logging.handlers.RotatingFileHandler)):
+                    self.file_handler = h
+
+
+            config = MyLogger._configs.get(name, {})
+            self.formatter = config.get('formatter')
+            self.file_path = config.get('file_path')
+            self.is_date = config.get('is_date')
+            self.when = config.get('when')
+            self.interval = config.get('interval')
+            self.backup_count = config.get('backup_count')
+            self.max_bytes = config.get('max_bytes')
+            self.sh_fmt = config.get('sh_fmt')
+            self.fh_fmt = config.get('fh_fmt')
+            return
+
+
+        MyLogger._initialized.add(name)
         self.logger = logging.getLogger(name)         # 创建日志器，自定义名称。默认为 __name__ 文件名。
         self.log_level=MyLogger.level_dic[str(level).upper()]
         self.logger.setLevel(self.log_level)         # 初始日志级别，默认为10。
         self.formatter = "[logger:%(name)s | %(asctime)s | %(filename)s | %(lineno)d行]:\n%(levelname)s：%(message)s"
         self.stream_handler = None
+        self.sh_fmt = sh_fmt
         self.file_handler = None
+        self.fh_fmt = fh_fmt
         self.is_date = is_date
         self.when = when
         self.interval = interval
         self.backup_count = backup_count
         self.max_bytes = max_bytes
         self.make_sh_handler(is_stream, sh_fmt)        # 设置控制台的输出格式
-        self.make_fh_handler(file_path, fh_fmt)
+        self.file_path = file_path
+        self.make_fh_handler(file_path, fh_fmt, is_date, when, interval, backup_count, max_bytes)
+
+        # 把参数存入到类属性中，方便后续调用。
+        MyLogger._configs[name] = {
+            'formatter': self.formatter,
+            'file_path': file_path,
+            'is_date': is_date,
+            'when': when,
+            'interval': interval,
+            'backup_count': backup_count,
+            'max_bytes': max_bytes,
+            'sh_fmt': sh_fmt,
+            'fh_fmt': fh_fmt,
+        }
 
     # 输出到控制台（屏幕）
     def make_sh_handler(self, is_stream, sh_fmt):
@@ -125,26 +177,57 @@ class MyLogger:
         else:
             print("未创建输出到屏幕的handler。")
 
-    # 输出到文件，永久保存。
-    def make_fh_handler(self, file_path, fh_fmt=None):
-        if file_path:
-            file_path = Path(file_path)# 存储到文件
-            # MyLogger.print(Path(file_path).absolute())
-            if not Path(file_path).parent.exists():
-                Path(file_path).parent.mkdir(parents=True)
+    def disable_stream(self):
+        """禁用屏幕输出"""
+        if self.stream_handler is not None:
+            self.logger.removeHandler(self.stream_handler)
+            self.stream_handler.close()
+            self.stream_handler = None
 
-            # when='D', interval=30  每30天，创建一个文件。 backupCount=365 最多保存365个
-            if self.is_date:
+    def enable_stream(self, sh_fmt=None):
+        if self.stream_handler is None:
+            fmt = sh_fmt if sh_fmt else self.formatter
+            self.make_sh_handler(True, fmt)
+        else:
+            MyLogger.print("已开启输出到屏幕，无需重新开启。")
+
+
+    # 输出到文件，永久保存。
+    def make_fh_handler(self, file_path, fh_fmt, is_date, when, interval, backup_count, max_bytes):
+        if file_path:
+            try:
+                file_path = Path(file_path)# 存储到文件
+                # MyLogger.print(Path(file_path).absolute())
+                if not Path(file_path).parent.exists():
+                    Path(file_path).parent.mkdir(parents=True)
+            except Exception as e:
+                MyLogger.error(e, exc_info=True)
+                MyLogger.warniing("【采用当前目录进行存储】")
+                file_path = "."
+
+            # when='D', interval=3  每3天，创建一个文件。 backupCount=100 最多保存100个
+            if is_date:
+                if isinstance(interval, int):
+                    pass
+                elif isinstance(interval, str):
+                    if interval.isdigit():
+                        interval = int(interval)
+                        if interval < 1:
+                            MyLogger.error("make_fh_handler函数的interval参数必须大于等于1。设为默认值【1】")
+                else:
+                    MyLogger.error("make_fh_handler函数的interval参数需是整型或整型字符串。设为默认值【1】")
+                    interval = 1
+
                 self.file_handler = logging.handlers.TimedRotatingFileHandler(filename=file_path,
-                                                                                   when=self.when,
-                                                                                   interval=self.interval,
-                                                                                   backupCount=self.backup_count,
-                                                                                   encoding="utf-8")  # 创建日志处理器，用文件存放日志。
+                                                                              when=when,
+                                                                              interval=interval,
+                                                                              backupCount=backup_count,
+                                                                              encoding="utf-8")  # 创建日志处理器，用文件存放日志。
             else:
                 self.file_handler = logging.handlers.RotatingFileHandler(filename=file_path,
-                                                                              maxBytes=self.max_bytes, # 10MB
-                                                                              backupCount=self.backup_count,
-                                                                              encoding="utf-8")
+                                                                         maxBytes=max_bytes, # 5MB
+                                                                         backupCount=backup_count,
+                                                                         encoding="utf-8")
             _fm = fh_fmt if fh_fmt else self.formatter
             _fmt = logging.Formatter(_fm, datefmt='%Y-%m-%d %H:%M:%S')
             self.file_handler.setFormatter(fmt=_fmt)
@@ -161,11 +244,35 @@ class MyLogger:
     # 设置保存到文件的等级
     @file_logger_level.setter
     def file_logger_level(self, level):
-        """单独调整屏幕输出的等级"""
+        """单独调整保存到文件的日志等级"""
         if self.file_handler:
             self.file_handler.setLevel(MyLogger.level_dic[str(level).upper()])
         else:
             print("未创建保存到文件的handler。")
+
+    def disable_file(self):
+        """禁用保存到文件"""
+        if self.file_handler is not None:
+            self.logger.removeHandler(self.file_handler)
+            self.file_handler.close()
+            self.file_handler = None
+
+    def enable_file(self, file=None, sh_fmt=None, is_date:bool=False , when:str="", interval=0, backup_count=0, max_bytes=0):
+        if self.file_handler is None:
+            if not file and not self.file_path:
+                MyLogger.error("请输入保存的logger文件名或路径。")
+                return
+            else:
+                path = file if file else self.file_path
+                fmt = sh_fmt if sh_fmt else self.formatter
+                is_date = is_date if is_date else self.is_date
+                when = when if when else self.when
+                interval = interval if interval else self.interval
+                backup_count = backup_count if backup_count else self.backup_count
+                max_bytes = max_bytes if max_bytes else self.max_bytes
+                self.make_fh_handler(path, fmt, is_date, when, interval, backup_count, max_bytes)
+        else:
+            MyLogger.print("已开启保存到文件，无需重新开启。")
 
     # 显式代理最常用的方法（为了更好的IDE提示和类型检查）,与下面的def __getattr__(self, name)方法二选一
     # stacklevel表示：从当前帧（Logger.debug被调用处）向上跳过的帧数。设为2即跳过代理层 + Logger内部层，精准定位到用户代码。
@@ -226,15 +333,15 @@ class MyLogger:
                     with ml.with_run_time():      # 用with包裹即可。
              """
         class RunTime:
-            def __init__(self2, logger):
-                self2.start = time.perf_counter()
-                self2.logger = logger
+            def __init__(self, logger):
+                self.start = time.perf_counter()
+                self.logger = logger
 
-            def __enter__(self2):
+            def __enter__(self):
                 pass
 
-            def __exit__(self2, exc_type, exc_val, exc_tb):
-                self2.logger.debug(f"程序运行用时：{time.perf_counter()-self2.start:.6} 秒。")
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                self.logger.debug(f"程序运行用时：{time.perf_counter()-self.start:.6} 秒。", stacklevel=2)
                 if exc_type:
                     print(f"捕获到异常：{exc_type}, {exc_val}")
         return RunTime(self.logger)
