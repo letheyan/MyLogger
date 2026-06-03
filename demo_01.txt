@@ -1,4 +1,0 @@
-[logger:测试 | 2026-06-03 15:43:39 | demo_02.py | 12行]:
-INFO：info1
-[logger:测试 | 2026-06-03 15:44:23 | demo_02.py | 12行]:
-INFO：info1
