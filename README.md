@@ -59,7 +59,7 @@ mg = MyLogger("new_logger", file_path='log_demo.log')
 mg.disable_stream()     # 关闭
 mg.enable_stream()      # 启动
 ```
-**关闭/启动输出到屏幕**
+**关闭/启动保存到文件**
 ```python
 mg = MyLogger("new_logger", file_path='log_demo.log')
 mg.disable_file()       # 关闭

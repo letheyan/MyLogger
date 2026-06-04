@@ -97,7 +97,7 @@ class MyLogger:
                 elif isinstance(h, (logging.handlers.TimedRotatingFileHandler, logging.handlers.RotatingFileHandler)):
                     self.file_handler = h
 
-
+            self.name = name
             config = MyLogger._configs.get(name, {})
             self.formatter = config.get('formatter')
             self.file_path = config.get('file_path')
@@ -112,6 +112,7 @@ class MyLogger:
 
 
         MyLogger._initialized.add(name)
+        self.name = name
         self.logger = logging.getLogger(name)         # 创建日志器，自定义名称。默认为 __name__ 文件名。
         self.log_level=MyLogger.level_dic[str(level).upper()]
         self.logger.setLevel(self.log_level)         # 初始日志级别，默认为10。
@@ -143,10 +144,10 @@ class MyLogger:
         }
 
     # 输出到控制台（屏幕）
-    def make_sh_handler(self, is_stream, sh_fmt):
+    def make_sh_handler(self, is_stream, sh_fmt=None):
         if is_stream:
             self.stream_handler = logging.StreamHandler(stream=sys.stdout)          # 创建日志处理器，在控制台打印
-            _fm = sh_fmt if sh_fmt else self.formatter
+            _fm = sh_fmt if (sh_fmt is not None) else self.formatter
             try:
                 self.stream_handler.setFormatter(ColoredFormatter(_fm, datefmt='%Y-%m-%d %H:%M:%S'))  # 创建格式器，指定日志的打印格式，及日期格式
             except ValueError as e:
@@ -186,7 +187,7 @@ class MyLogger:
 
     def enable_stream(self, sh_fmt=None):
         if self.stream_handler is None:
-            fmt = sh_fmt if sh_fmt else self.formatter
+            fmt = sh_fmt if (sh_fmt is not None) else self.formatter
             self.make_sh_handler(True, fmt)
         else:
             self.logger.info("已开启输出到屏幕，无需重新开启。")
@@ -202,8 +203,10 @@ class MyLogger:
                     Path(file_path).parent.mkdir(parents=True)
             except Exception as e:
                 self.logger.error(e, exc_info=True)
-                self.logger.warning("【采用当前目录进行存储./log.txt】")
-                file_path = Path("./log.txt")
+                self.logger.warning("【临时性采用当前目录进行存储log.txt】")
+                file_path = Path("log.txt")
+                MyLogger._configs[self.name]['file_path'] = "log.txt"  # 更新设置
+                self.file_path = "log.txt"
 
             # when='D', interval=3  每3天，创建一个文件。 backupCount=100 最多保存100个
             if is_date:
@@ -273,43 +276,50 @@ class MyLogger:
             else:
                 if file is None or file == "":
                     file = self.file_path
+                else:
+                    MyLogger._configs[self.name]['file_path'] = file  # 更新设置
+                    self.file_path = file
+
                 if fh_fmt is None:
                     fh_fmt = self.fh_fmt or self.formatter
+                else:
+                    MyLogger._configs[self.name]['fh_fmt'] = fh_fmt
+                    self.fh_fmt = fh_fmt
+
                 if is_date is None:
                     is_date = self.is_date
+                else:
+                    MyLogger._configs[self.name]['is_date'] = is_date
+                    self.is_date = is_date
+
                 if when is None:
                     when = self.when
+                else:
+                    MyLogger._configs[self.name]['when'] = when
+                    self.when = when
+
+
                 if interval is None:
                     interval = self.interval
+                else:
+                    MyLogger._configs[self.name]['interval'] = interval
+                    self.interval = interval
+
                 if backup_count is None:
                     backup_count = self.backup_count
+                else:
+                    MyLogger._configs[self.name]['backup_count'] = backup_count
+                    self.backup_count = backup_count
+
                 if max_bytes is None:
                     max_bytes = self.max_bytes
+                else:
+                    MyLogger._configs[self.name]['max_bytes'] = max_bytes
+                    self.max_bytes = max_bytes
+
                 self.make_fh_handler(file, fh_fmt, is_date, when, interval, backup_count, max_bytes)
         else:
             self.logger.info("已开启保存到文件，无需重新开启。")
-
-    # 显式代理最常用的方法（为了更好的IDE提示和类型检查）,与下面的def __getattr__(self, name)方法二选一
-    # stacklevel表示：从当前帧（Logger.debug被调用处）向上跳过的帧数。设为2即跳过代理层 + Logger内部层，精准定位到用户代码。
-    # def debug(self, msg, *args, **kwargs):
-    #     kwargs['stacklevel'] = 2
-    #     return self.logger.debug(msg, *args, **kwargs)
-    #
-    # def info(self, msg, *args, **kwargs):
-    #     kwargs['stacklevel'] = 2
-    #     return self.logger.info(msg, *args, **kwargs)
-    #
-    # def warning(self, msg, *args, **kwargs):
-    #     kwargs['stacklevel'] = 2
-    #     return self.logger.warning(msg, *args, **kwargs)
-    #
-    # def error(self, msg, *args, **kwargs):
-    #     kwargs['stacklevel'] = 2
-    #     return self.logger.error(msg, *args, **kwargs)
-    #
-    # def critical(self, msg, *args, **kwargs):
-    #     kwargs['stacklevel'] = 2
-    #     return self.logger.critical(msg, *args, **kwargs)
 
     def __getattr__(self, name):
          """将所有未定义的方法调用转发给内部的 logger 对象
