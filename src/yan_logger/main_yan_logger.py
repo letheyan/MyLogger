@@ -107,7 +107,9 @@ class MyLogger:
             self.backup_count = config.get('backup_count')
             self.max_bytes = config.get('max_bytes')
             self.sh_fmt = config.get('sh_fmt')
+            self.sh_level = config.get('sh_level')
             self.fh_fmt = config.get('fh_fmt')
+            self.fh_level = config.get('fh_level')
             return
 
 
@@ -140,7 +142,9 @@ class MyLogger:
             'backup_count': backup_count,
             'max_bytes': max_bytes,
             'sh_fmt': sh_fmt,
+            'sh_level': None,
             'fh_fmt': fh_fmt,
+            'fh_level': None
         }
 
     # 输出到控制台（屏幕）
@@ -174,7 +178,12 @@ class MyLogger:
     def stream_logger_level(self, level):
         """单独调整屏幕输出的等级"""
         if self.stream_handler:
-            self.stream_handler.setLevel(MyLogger.level_dic[str(level).upper()])
+            if str(level).upper() in MyLogger.level_dic:
+                self.stream_handler.setLevel(MyLogger.level_dic[str(level).upper()])
+                MyLogger.print(f"已设置日志等级：{MyLogger.level_dic.get(str(level).upper())}")
+                MyLogger._configs[self.name]['sh_level'] = level
+            else:
+                self.logger.warning(f"请输入正确的日志等级：{MyLogger.level_dic.keys()}，现采用默认的日志等级debug。")
         else:
             self.logger.info("未创建输出到屏幕的handler。")
 
@@ -185,10 +194,17 @@ class MyLogger:
             self.stream_handler.close()
             self.stream_handler = None
 
-    def enable_stream(self, sh_fmt=None):
+    def enable_stream(self, level=None, sh_fmt=None):
         if self.stream_handler is None:
             fmt = sh_fmt if (sh_fmt is not None) else self.formatter
             self.make_sh_handler(True, fmt)
+            if level:
+                self.stream_logger_level = level
+            else:
+                if MyLogger._configs[self.name]["sh_level"]:
+                    self.stream_logger_level = MyLogger._configs[self.name]["sh_level"]
+                else:
+                    pass
         else:
             self.logger.info("已开启输出到屏幕，无需重新开启。")
 
@@ -256,7 +272,10 @@ class MyLogger:
     def file_logger_level(self, level):
         """单独调整保存到文件的日志等级"""
         if self.file_handler:
-            self.file_handler.setLevel(MyLogger.level_dic[str(level).upper()])
+            if str(level).upper() in MyLogger.level_dic:
+                self.file_handler.setLevel(MyLogger.level_dic[str(level).upper()])
+                MyLogger.print(f"已设置日志等级：{MyLogger.level_dic.get(str(level).upper())}")
+                MyLogger._configs[self.name]['fh_level'] = level
         else:
             self.logger.info("未创建保存到文件的handler。")
 
@@ -267,7 +286,7 @@ class MyLogger:
             self.file_handler.close()
             self.file_handler = None
 
-    def enable_file(self, file=None, fh_fmt=None,  is_date=None, when=None,
+    def enable_file(self, level=None, file=None, fh_fmt=None,  is_date=None, when=None,
                     interval=None, backup_count=None, max_bytes=None):
         if self.file_handler is None:
             if not file and not self.file_path:
@@ -298,7 +317,6 @@ class MyLogger:
                     MyLogger._configs[self.name]['when'] = when
                     self.when = when
 
-
                 if interval is None:
                     interval = self.interval
                 else:
@@ -318,6 +336,13 @@ class MyLogger:
                     self.max_bytes = max_bytes
 
                 self.make_fh_handler(file, fh_fmt, is_date, when, interval, backup_count, max_bytes)
+                if level:
+                    self.file_logger_level = level
+                else:
+                    if MyLogger._configs[self.name]["fh_level"]:
+                        self.file_logger_level = MyLogger._configs[self.name]["fh_level"]
+                    else:
+                        pass
         else:
             self.logger.info("已开启保存到文件，无需重新开启。")
 
@@ -382,18 +407,20 @@ class MyLogger:
 
 if __name__ == '__main__':
     ml = MyLogger()
-    # ml.stream_logger_level = 30
+    ml.stream_logger_level = 10
     # ml.file_logger_level = 30
     # ml.warning(ml.stream_logger_level)
 
     with ml.with_run_time():
-        for i in range(5):
+        for i in range(1):
             ml.debug("哈哈哈哈")
             ml.info("呵呵呵")
+            ml.disable_stream()
             ml.warning("咯咯咯")
             ml.error("嗯嗯嗯")
+            ml.enable_stream(level=40)
             ml.critical("吼吼吼")
-            # ml.logger.info(ml.stream_logger_level)
+
             ml.logger.debug("哈哈哈哈")
             ml.logger.info("呵呵呵")
             ml.logger.warning("咯咯咯")

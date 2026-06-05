@@ -3,20 +3,19 @@
 # File: demo_01.py             
 # Software: PyCharm
 
-# from yan_logger import MyLogger
+from yan_logger import MyLogger
 import logging
-from src.yan_logger import MyLogger
+# from src.yan_logger import MyLogger
 
 
 ml = MyLogger("测试", file_path="demo_01.txt")
 
 # ml.file_handler.setLevel(logging.ERROR)
 
-# ml.info('info1')
-# ml.disable_file()
-# ml.info('info11')
-# ml.enable_file("demo_02.txt")
-# ml.info('info111')
+ml.info('info1')
+ml.info('info11')
+ml.info('info111')
+ml.stream_logger_level = 40
 
 
 
