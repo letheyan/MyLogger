@@ -10,6 +10,9 @@ src/yan_logger.egg-info/
 
 # Ignore log files
 log.txt
+demo_01.py
+demo_02.py
+demo_03.py
 
 # Ignore generated files
 *.pyc

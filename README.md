@@ -8,11 +8,13 @@ Use Python's logging instead of print to quickly output program information to t
 4. 支持计算程序运行时间。
 5. 支持原生print函数，附带文件名和行号。 
 ## 更新功能：
-1. 增加可动态设置输出到屏幕与保存到日志属性功能。
-2. 增加路径参数校验功能。
+1. 增加可动态关闭与打开输出到屏幕与保存到日志属性功能。
+2. 新增set_config()，动态设置日志属性。
+3. 新增IDE中debug,info,warning,error,critical,exception方法提示的功能。
 ## 修复问题：
 1. 解决多文件存在引用的情况下，设置相同的Logger名称下，会同时输出多个多个logger信息的问题。
 2. 解决with_run_time显示的行号不准确的问题。
+3. 解决多个 MyLogger 实例，各自缓存自己的 handler 引用，导致 handler 管理发生错乱的问题。
 
 
 # 快速使用
@@ -66,6 +68,11 @@ mg.disable_file()       # 关闭
 mg.enable_file()        # 启动，可以自定义新的参数。
 ```
 
+**动态设置属性**
+```python
+mg = MyLogger("new_logger", file_path='log_demo.log')
+mg.set_config(sh_level=30)
+```
 
 **计算程序运行时间**
 ```python
