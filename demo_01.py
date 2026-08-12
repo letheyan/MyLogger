@@ -16,7 +16,7 @@ ml.info('info1')
 ml.info('info11')
 ml.info('info111')
 ml.stream_logger_level = 20
-ml.print(ml.config)
+# ml.print(ml.config)
 
 
 

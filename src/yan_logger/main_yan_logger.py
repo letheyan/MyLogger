@@ -215,9 +215,11 @@ class MyLogger:
 
         if sh_changed:
             if self.is_stream:
+                self.logger.info("123")
                 self.disable_stream()
                 self.enable_stream(level=self.sh_level, sh_fmt=self.sh_fmt)
             else:
+                self.logger.info("456")
                 self.disable_stream()
 
         # 设置fh_handler，已做好传入参数和配置参数的选择
@@ -335,7 +337,7 @@ class MyLogger:
     def disable_stream(self):
         """禁用屏幕输出"""
         if self.stream_handler is not None:
-            self.logger.debug("关闭输出到屏幕。")
+            self.logger.debug("关闭输出到屏幕。",stacklevel=2)
             self.logger.removeHandler(self.stream_handler)
             self.stream_handler.close()
             self.stream_handler = None
@@ -343,8 +345,8 @@ class MyLogger:
 
     def enable_stream(self, level=None, sh_fmt=None):
         if self.stream_handler is None:
-            self.logger.debug("启用输出到屏幕。")
             self.make_sh_handler(True, sh_fmt)
+            self.logger.debug("启用输出到屏幕。", stacklevel=2)
             if level:
                 self.stream_logger_level = level
                 self.config["sh_level"] = level  # 更新配置
@@ -447,7 +449,7 @@ class MyLogger:
     def disable_file(self):
         """禁用保存到文件"""
         if self.file_handler is not None:
-            self.logger.debug("关闭保存到本地日志功能。")
+            self.logger.debug("关闭保存到本地日志功能。", stacklevel=2)
             self.logger.removeHandler(self.file_handler)
             self.file_handler.close()
             self.file_handler = None
@@ -457,7 +459,7 @@ class MyLogger:
                           interval=None,  backup_count=None, max_bytes=None):
 
         if self.file_handler is None:
-            self.logger.debug("开启保存到本地日志功能。")
+            self.logger.debug("开启保存到本地日志功能。", stacklevel=2)
             if not file_path and not self.config["file_path"]:
                 self.file_path = "log.txt"
                 self.logger.warning(f"未输入保存的logger文件名或路径，默认保存到当前目录的{self.file_path}文件中。")

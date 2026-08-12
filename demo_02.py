@@ -7,10 +7,10 @@ from src.yan_logger import MyLogger
 from demo_01 import fun1
 
 
-fun1()
-ml = MyLogger("测试", level=40)
-# ml.set_config(sh_level=10, fh_level=30)
+ml = MyLogger("测试", level=20)
+ml.set_config(sh_level=10)
 
+fun1()
 
 ml.print(ml.config)
 
@@ -25,3 +25,5 @@ def fun2():
         ml.enable_stream(level=20)
         # ml.disable_file()
         ml.info('info333')
+
+fun2()
