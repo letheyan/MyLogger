@@ -3,16 +3,19 @@
 # File: demo_02.py             
 # Software: PyCharm
 from src.yan_logger import MyLogger
+# from yan_logger import MyLogger
 from demo_01 import fun1
 
-ml = MyLogger("测试")
-ml.set_config(sh_level=10, file_path="log.txt")
+
+fun1()
+ml = MyLogger("测试", level=40)
+# ml.set_config(sh_level=10, fh_level=30)
 
 
 ml.print(ml.config)
 
 
-fun1()
+
 
 def fun2():
     with ml.with_run_time():

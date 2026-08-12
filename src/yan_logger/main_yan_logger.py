@@ -135,7 +135,7 @@ class MyLogger:
                 if ((level != "DEBUG") or (is_stream != True) or (file_path is not None) or (fh_fmt is not None)
                         or (sh_fmt is not None) or (is_date != True) or (when != "d") or (interval != 7) or
                         (backup_count != 100) or (max_bytes != 5 * 1024 * 1024)):
-                    self.logger.warning("已有同名的MyLogger实例，初始化时无需传入name之外的参数。如需重新设置，请使用set_config()方法。")
+                    self.logger.warning("已有同名的MyLogger实例，初始化时无需传入name之外的参数。如需重新设置，请使用set_config()方法。", stacklevel=2)
                 return
 
 
@@ -343,6 +343,7 @@ class MyLogger:
 
     def enable_stream(self, level=None, sh_fmt=None):
         if self.stream_handler is None:
+            self.logger.debug("启用输出到屏幕。")
             self.make_sh_handler(True, sh_fmt)
             if level:
                 self.stream_logger_level = level
@@ -446,6 +447,7 @@ class MyLogger:
     def disable_file(self):
         """禁用保存到文件"""
         if self.file_handler is not None:
+            self.logger.debug("关闭保存到本地日志功能。")
             self.logger.removeHandler(self.file_handler)
             self.file_handler.close()
             self.file_handler = None
@@ -455,6 +457,7 @@ class MyLogger:
                           interval=None,  backup_count=None, max_bytes=None):
 
         if self.file_handler is None:
+            self.logger.debug("开启保存到本地日志功能。")
             if not file_path and not self.config["file_path"]:
                 self.file_path = "log.txt"
                 self.logger.warning(f"未输入保存的logger文件名或路径，默认保存到当前目录的{self.file_path}文件中。")
