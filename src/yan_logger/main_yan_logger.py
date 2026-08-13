@@ -424,7 +424,7 @@ class MyLogger:
             self.file_handler.setFormatter(fmt=_fmt)
             self.logger.addHandler(self.file_handler)
         else:
-            self.logger.debug("无日志保存路径，不开启保存到本地文件的日志功能。")
+            self.logger.debug("无日志保存路径，不开启保存到本地文件的日志功能。", stacklevel=3)
 
     # 读取保存到文件的等级
     @property

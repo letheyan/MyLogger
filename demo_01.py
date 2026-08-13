@@ -8,7 +8,7 @@
 from src.yan_logger import MyLogger
 
 
-ml = MyLogger("测试", file_path="log.txt")
+ml = MyLogger("测试")
 
 # ml.file_handler.setLevel(logging.ERROR)
 
