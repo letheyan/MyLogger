@@ -215,11 +215,11 @@ class MyLogger:
 
         if sh_changed:
             if self.is_stream:
-                self.logger.info("123")
+                # self.logger.info("123")
                 self.disable_stream()
                 self.enable_stream(level=self.sh_level, sh_fmt=self.sh_fmt)
             else:
-                self.logger.info("456")
+                # self.logger.info("456")
                 self.disable_stream()
 
         # 设置fh_handler，已做好传入参数和配置参数的选择
