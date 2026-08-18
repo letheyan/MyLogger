@@ -15,7 +15,10 @@ ml = MyLogger("测试")
 ml.info('info1')
 ml.info('info11')
 ml.info('info111')
-ml.stream_logger_level = 20
+ml.stream_logger_level = 10
+# ml.disable_stream()
+# ml.info('info22')
+# ml.enable_stream(level=20)
 # ml.print(ml.config)
 
 

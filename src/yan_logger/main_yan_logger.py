@@ -185,8 +185,8 @@ class MyLogger:
             self.make_sh_handler(is_stream, sh_fmt)  # 创建控输出到制台的handler
             self.make_fh_handler(file_path, fh_fmt, is_date, when, interval, backup_count, max_bytes)  # 创建保存到文件的handler
 
-            if not self.logger.handlers:
-                self.logger.warning("当前 Logger 未配置任何输出目标（控制台和文件均已禁用），日志将不会被记录。")
+            if not is_stream and not file_path:
+                MyLogger.print("当前 Logger 未配置任何输出目标（控制台和文件均已禁用），日志将不会被记录。")
 
     # 批量设置属性的方法
     def set_config(self,sh_level=None, is_stream=None, fh_level=None, file_path=None, fh_fmt=None, sh_fmt=None,
@@ -302,15 +302,14 @@ class MyLogger:
             try:
                 self.stream_handler.setFormatter(ColoredFormatter(_fm, datefmt='%Y-%m-%d %H:%M:%S'))  # 创建格式器，指定日志的打印格式，及日期格式
             except ValueError as e:
-                self.logger.error(f"设置日志格式失败：{e}!!!")
-                self.logger.error("启用默认输出格式。")
+                self.logger.error(f"设置日志格式失败，启用默认输出格式。：\n{e}!!!", stacklevel=2)
                 _fmt = logging.Formatter(self.formatter, datefmt='%Y-%m-%d %H:%M:%S')
                 self.stream_handler.setFormatter(fmt=_fmt)
             self.logger.addHandler(self.stream_handler)
         else:
             # nu = logging.NullHandler()
             # self.logger.addHandler(nu)
-            self.logger.debug("不添加控制台输出。")
+            MyLogger.print("未创建输出到屏幕的handler。")
 
     # 读取屏幕输出的等级
     @property
@@ -327,12 +326,12 @@ class MyLogger:
         if self.stream_handler:
             if str(level).upper() in MyLogger.level_dic:
                 self.stream_handler.setLevel(MyLogger.level_dic[str(level).upper()])
-                MyLogger.print(f"已设置日志等级：{MyLogger.level_dic.get(str(level).upper())}")
+                self.logger.debug(f"已设置日志等级：{MyLogger.level_dic.get(str(level).upper())}", stacklevel=2)
                 self.config['sh_level'] = level   # 更新配置
             else:
-                self.logger.warning(f"请输入正确的日志等级：{MyLogger.level_dic.keys()}，现采用默认的日志等级debug。")
+                self.logger.warning(f"请输入正确的日志等级：{MyLogger.level_dic.keys()}，现采用默认的日志等级debug。", stacklevel=2)
         else:
-            self.logger.info("未创建输出到屏幕的handler。")
+            MyLogger.print("未创建输出到屏幕的handler。")
 
     def disable_stream(self):
         """禁用屏幕输出"""
@@ -356,7 +355,7 @@ class MyLogger:
                 else:
                     self.stream_logger_level = self.config["log_level"]
         else:
-            self.logger.info("已开启输出到屏幕，无需重新开启。")
+            self.logger.warning("已开启输出到屏幕，无需重复开启，本条信息只做警告，不执行设置。", stacklevel=2)
 
 
     # 输出到文件，永久保存。
@@ -395,7 +394,7 @@ class MyLogger:
                                                                               encoding="utf-8")  # 创建日志处理器，用文件存放日志。
             else:
                 if max_bytes <= 0:
-                    self.logger.warning("max_bytes 必须大于0，已设为默认 5MB")
+                    self.logger.warning("max_bytes 必须大于0，已设为默认 5MB", stacklevel=3)
                     max_bytes = 5 * 1024 * 1024
                 self.file_handler = logging.handlers.RotatingFileHandler(filename=file_path,
                                                                          maxBytes=max_bytes, # 5MB
@@ -444,7 +443,7 @@ class MyLogger:
                 MyLogger.print(f"已设置日志等级：{MyLogger.level_dic.get(str(level).upper())}")
                 self.config['fh_level'] = level   # 更新配置
         else:
-            self.logger.info("未创建保存到文件的handler。")
+            self.logger.warning("未创建保存到文件的handler，无法设置保存到文件的日志等级。", stacklevel=2)
 
     def disable_file(self):
         """禁用保存到文件"""
@@ -462,7 +461,7 @@ class MyLogger:
             self.logger.debug("开启保存到本地日志功能。", stacklevel=2)
             if not file_path and not self.config["file_path"]:
                 self.file_path = "log.txt"
-                self.logger.warning(f"未输入保存的logger文件名或路径，默认保存到当前目录的{self.file_path}文件中。")
+                self.logger.warning(f"未输入保存的logger文件名或路径，默认保存到当前目录的{self.file_path}文件中。",stacklevel=2)
             else:
                 self.file_path = file_path or self.config["file_path"]
 
@@ -486,7 +485,7 @@ class MyLogger:
                 saved = self.config.get("fh_level")
                 self.file_logger_level = saved if saved else self.config.get("log_level", "DEBUG")
         else:
-            self.logger.info("已开启保存到文件，无需重新开启。")
+            self.logger.warning("已开启保存到文件，无需重新开启。", stacklevel=2)
 
     def debug(self, msg, *args, **kwargs):
         """记录 DEBUG 级别日志"""
@@ -563,16 +562,16 @@ class MyLogger:
                 pass
 
             def __exit__(self, exc_type, exc_val, exc_tb):
-                self.logger.info(f"程序运行用时：{time.perf_counter()-self.start:.6} 秒。", stacklevel=3)
+                self.logger.info(f"程序运行用时：{time.perf_counter()-self.start:.6} 秒。", stacklevel=2)
                 if exc_type:
-                    print(f"捕获到异常：{exc_type}, {exc_val}")
+                    self.logger.error(f"捕获到异常：{exc_type}, {exc_val}")
         return RunTime(self.logger)
 
     # 等同print函数，只是增加了输出 文件名+行号。
     @staticmethod
     def print(*args,**kwargs):
         # from builtins import print as _print
-        caller_frame = sys._getframe(1) # 注此处需加参数 1。
+        caller_frame = sys._getframe(1)  # 注此处需加参数 1。
         row = f'{caller_frame.f_lineno}'
         caller_name = Path(caller_frame.f_code.co_filename).name
         return print(f'【"{caller_name}" 第{row}行】>:', *args, **kwargs)

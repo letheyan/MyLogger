@@ -20,10 +20,11 @@ ml.print(ml.config)
 def fun2():
     with ml.with_run_time():
         ml.critical('info1')
-        ml.disable_stream()
-        ml.info('info22')
-        ml.enable_stream(level=20)
+
         # ml.disable_file()
         ml.info('info333')
 
 fun2()
+ml.disable_stream()
+ml.info('info22')
+ml.enable_stream(level=20)
