@@ -90,7 +90,7 @@ class MyLogger:
          is_date：默认True，以日期循环的方式进行存储
          interval：默认7，7天一个文件。
          when：以日期循环的方式保存，参数有 'S' 秒，'M' 分钟，'H' 小时，'D' 天，'W0'-'W6' 工作日(0=星期一)。
-         backupCount : 保存的文件个数，超过设置的数值，会清空前面的。如果为 0 ，则一直保存。
+         backup_count : 保存的文件个数，超过设置的数值，会清空前面的。如果为 0 ，则一直保存。
          max_bytes：以文件大小的方式进行保存，单位为字节。 5 * 1024 * 1024 = 5M。
         """
         with MyLogger._lock:
@@ -458,10 +458,10 @@ class MyLogger:
                           interval=None,  backup_count=None, max_bytes=None):
 
         if self.file_handler is None:
-            self.logger.debug("开启保存到本地日志功能。", stacklevel=2)
+            self.logger.debug("准备开启保存到本地日志功能。", stacklevel=2)  # 此时，该条日志只能输出到屏幕，不能保存到本地。
             if not file_path and not self.config["file_path"]:
                 self.file_path = "log.txt"
-                self.logger.warning(f"未输入保存的logger文件名或路径，默认保存到当前目录的{self.file_path}文件中。",stacklevel=2)
+                self.logger.warning(f"未输入保存的logger文件名或路径，默认保存到当前目录的{self.file_path}文件中。",stacklevel=2) # 此时，该条日志只能输出到屏幕，不能保存到本地。
             else:
                 self.file_path = file_path or self.config["file_path"]
 
@@ -484,6 +484,7 @@ class MyLogger:
             else:
                 saved = self.config.get("fh_level")
                 self.file_logger_level = saved if saved else self.config.get("log_level", "DEBUG")
+            self.logger.info(f"已开启日志本地保存功能，保存路径：{self.file_path}")
         else:
             self.logger.warning("已开启保存到文件，无需重新开启。", stacklevel=2)
 
